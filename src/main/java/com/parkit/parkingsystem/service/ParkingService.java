@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ParkingService {
 
@@ -102,9 +103,15 @@ public class ParkingService {
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
+            Date inTimeDiff = ticket.getInTime();
             ticket.setOutTime(outTime);
             fareCalculatorService.calculateFare(ticket);
             if(ticketDAO.updateTicket(ticket)) {
+            	
+            	long difference = inTimeDiff.getTime() - outTime.getTime();
+            	long diffConvertMinutes = TimeUnit.MINUTES.convert(difference, TimeUnit.MILLISECONDS);
+                System.out.println(diffConvertMinutes);
+                
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);
                 parkingSpotDAO.updateParking(parkingSpot);
