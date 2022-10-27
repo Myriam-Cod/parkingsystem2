@@ -100,6 +100,7 @@ public class ParkingService {
 
     public void processExitingVehicle() {
         try{
+        	boolean forCurrentUser = ticketDAO.getOccurence(getVehichleRegNumber());
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
@@ -111,7 +112,12 @@ public class ParkingService {
             	long difference = outTime.getTime() - inTimeDiff.getTime();
             	long diffConvertMinutes = TimeUnit.MINUTES.convert(difference, TimeUnit.MILLISECONDS);
                 System.out.println("ici la diff" + diffConvertMinutes);
-                
+                System.out.println(forCurrentUser);
+                if(forCurrentUser) {
+                	 System.out.println("ici le montant avant reduc" + ticket.getPrice());
+                	ticket.setPrice(ticket.getPrice() - (ticket.getPrice() * 0.95));
+                }
+                System.out.println("ici la reduc" + ticket.getPrice());
                 if(diffConvertMinutes <= 30) {
                     ticket.setPrice(0);
                 }
