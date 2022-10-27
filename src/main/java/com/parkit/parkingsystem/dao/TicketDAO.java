@@ -71,19 +71,15 @@ public class TicketDAO {
     
     public boolean getOccurence(String vehicleRegNumber) {
     	Connection con = null;
-    	
+    	int i = 0;
+    	boolean result = false;
     	try {
     		con = dataBaseConfig.getConnection();
             PreparedStatement ps = con.prepareStatement(DBConstants.GET_OCCURENCE);
             ps.setString(1,vehicleRegNumber);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-            	int i = rs.getInt(1);
-            	if(i > 0) {
-            		return true;
-            	}else {
-            		return false;
-            	}
+            	i = rs.getInt(1);	
             }
             dataBaseConfig.closeResultSet(rs);
             dataBaseConfig.closePreparedStatement(ps);
@@ -91,7 +87,8 @@ public class TicketDAO {
             logger.error("Error fetching next available slot",ex);
     	}finally {
             dataBaseConfig.closeConnection(con);
-            return false;
+            if (i > 0) result = true;
+            return result;
         }
     }
     

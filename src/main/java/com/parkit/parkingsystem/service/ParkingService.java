@@ -45,6 +45,8 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
+                boolean forCurrentUser = ticketDAO.getOccurence(ticket.getVehicleRegNumber());
+            	ticket.setForCurrentUser(forCurrentUser);
                 ticketDAO.saveTicket(ticket);
                 System.out.println("Generated Ticket and saved in DB");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
@@ -100,12 +102,13 @@ public class ParkingService {
 
     public void processExitingVehicle() {
         try{
-        	boolean forCurrentUser = ticketDAO.getOccurence(getVehichleRegNumber());
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
             Date inTimeDiff = ticket.getInTime();
             ticket.setOutTime(outTime);
+            boolean forCurrentUser = ticketDAO.getOccurence(ticket.getVehicleRegNumber());
+        	ticket.setForCurrentUser(forCurrentUser);
             fareCalculatorService.calculateFare(ticket);
             if(ticketDAO.updateTicket(ticket)) {
             	System.out.println(inTimeDiff);
@@ -115,7 +118,7 @@ public class ParkingService {
                 System.out.println(forCurrentUser);
                 if(forCurrentUser) {
                 	 System.out.println("ici le montant avant reduc" + ticket.getPrice());
-                	ticket.setPrice(ticket.getPrice() - (ticket.getPrice() * 0.95));
+                	ticket.setPrice(ticket.getPrice() * 0.95);
                 }
                 System.out.println("ici la reduc" + ticket.getPrice());
                 if(diffConvertMinutes <= 30) {
