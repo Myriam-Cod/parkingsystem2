@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ParkingService {
 
@@ -44,6 +45,8 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
+                boolean forCurrentUser = ticketDAO.getOccurence(ticket.getVehicleRegNumber());
+            	ticket.setForCurrentUser(forCurrentUser);
                 ticketDAO.saveTicket(ticket);
                 System.out.println("Generated Ticket and saved in DB");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
@@ -102,14 +105,31 @@ public class ParkingService {
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
+            Date inTimeDiff = ticket.getInTime();
             ticket.setOutTime(outTime);
+            boolean forCurrentUser = ticketDAO.getOccurence(ticket.getVehicleRegNumber());
+        	ticket.setForCurrentUser(forCurrentUser);
             fareCalculatorService.calculateFare(ticket);
             if(ticketDAO.updateTicket(ticket)) {
-                ParkingSpot parkingSpot = ticket.getParkingSpot();
-                parkingSpot.setAvailable(true);
-                parkingSpotDAO.updateParking(parkingSpot);
-                System.out.println("Please pay the parking fare:" + ticket.getPrice());
-                System.out.println("Recorded out-time for vehicle number:" + ticket.getVehicleRegNumber() + " is:" + outTime);
+            	System.out.println(inTimeDiff);
+            	long difference = outTime.getTime() - inTimeDiff.getTime();
+            	long diffConvertMinutes = TimeUnit.MINUTES.convert(difference, TimeUnit.MILLISECONDS);
+                System.out.println("ici la diff" + diffConvertMinutes);
+                System.out.println(forCurrentUser);
+                if(forCurrentUser) {
+                	 System.out.println("ici le montant avant reduc" + ticket.getPrice());
+                	ticket.setPrice(ticket.getPrice() * 0.95);
+                }
+                System.out.println("ici la reduc" + ticket.getPrice());
+                if(diffConvertMinutes <= 30) {
+                    ticket.setPrice(0);
+                }
+                    ParkingSpot parkingSpot = ticket.getParkingSpot();
+                    parkingSpot.setAvailable(true);
+                    parkingSpotDAO.updateParking(parkingSpot);
+                    System.out.println("Please pay the parking fare:" + ticket.getPrice());
+                    System.out.println("Recorded out-time for vehicle number:" + ticket.getVehicleRegNumber() + " is:" + outTime);
+    
             }else{
                 System.out.println("Unable to update ticket information. Error occurred");
             }
